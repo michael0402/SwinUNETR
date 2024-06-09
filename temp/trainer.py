@@ -1,14 +1,3 @@
-# Copyright 2020 - 2022 MONAI Consortium
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#     http://www.apache.org/licenses/LICENSE-2.0
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 import argparse
 import os
 import sys
@@ -25,18 +14,8 @@ from torch.utils.data import Subset
 import torch
 import torch.nn.parallel
 import torch.utils.data.distributed
-# from tensorboardX import SummaryWriter
-# from torch.cuda.amp import GradScaler, autocast
-# from utils.utils import AverageMeter, distributed_all_gather
 
 from monai.data import decollate_batch
-
-# import torch
-# import torch.nn.parallel
-# import torch.utils.data.distributed
-# from optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
-# from trainer import run_training
-# from utils.data_utils import get_loader
 
 from monai.inferers import sliding_window_inference
 from monai.losses import DiceLoss
@@ -76,9 +55,6 @@ class AverageMeter(object):
 
 
 def datafold_read(datalist, basedir, fold=0, key="training"):
-    # with open(datalist) as f:
-    #     json_data = json.load(f)
-
     # Initialize the S3 client
     s3 = boto3.client('s3')
 
@@ -120,90 +96,6 @@ def save_checkpoint(model, epoch, dir_add, filename="model.pt", best_acc=0):
     print("Saving checkpoint", filename)
 
 
-# class S3Dataset(torch.utils.data.Dataset):
-#     def __init__(self, data, transform=None, bucket_name="swin-unetr-brains"):
-#         self.data = data
-#         self.transform = transform
-#         self.s3 = boto3.client('s3')
-#         self.bucket_name = bucket_name
-
-#     def __len__(self):
-#         return len(self.data)
-    
-#     def __getitem__(self, idx):
-#         item = self.data[idx]
-#         image_path, label_path = item['image'], item['label']
-        
-#         # Handle paths whether they are lists or single strings
-#         image_files = self.download_s3_objects(image_path) if isinstance(image_path, list) else [self.download_s3_object(image_path)]
-#         label_files = self.download_s3_objects(label_path) if isinstance(label_path, list) else [self.download_s3_object(label_path)]
-        
-#         # Check if any file failed to download and handle it
-#         if None in image_files or None in label_files:
-#             logger.error("One or more files could not be downloaded properly.")
-#             raise ValueError("Failed to download all necessary files.")
-
-#         # Using the first file as an example, assuming files are required
-#         print("image files: ", image_files)
-#         image, label = image_files[0], label_files[0]
-        
-#         data = {'image': image_files, 'label': label}
-#         # print("here")
-#         # print(image)
-#         # nii_img = nib.load(image)
-#         # print(nii_img.shape)
-#         if self.transform:
-#             print("Data before transform:", data)  # Debug print
-#             data = self.transform(data)
-#         return data
-
-#     def download_s3_object(self, file_key):
-#         _, full_extension = os.path.splitext(file_key)
-#         if full_extension == ".gz":
-#             # Check if the real extension is .nii.gz
-#             main_part, pre_extension = os.path.splitext(file_key[:-3])
-#             if pre_extension == ".nii":
-#                 full_extension = ".nii.gz"
-        
-#         # local_file_path = tempfile.mktemp()
-#         # try:
-#         #     logger.info(f"Downloading from {self.bucket_name}: {file_key} to {local_file_path}")
-#         #     self.s3.download_file(self.bucket_name, file_key, local_file_path)
-#         #     return local_file_path
-#         # except Exception as e:
-#         #     logger.error(f"Error downloading {file_key}: {e}")
-#         #     return None
-#         try:
-#             with tempfile.NamedTemporaryFile(delete=False, suffix=full_extension) as tmp_file:
-#                 self.s3.download_file(self.bucket_name, file_key, tmp_file.name)
-#                 logger.info(f"Successfully downloaded {file_key} to {tmp_file.name}")
-#                 return tmp_file.name
-#         except Exception as e:
-#             logger.error(f"Error downloading {file_key}: {e}")
-#             return None
-
-#     def download_s3_objects(self, file_keys):
-#         local_file_paths = []
-#         for file_key in file_keys:
-#             file_path = self.download_s3_object(file_key)
-#             if file_path is not None:
-#                 local_file_paths.append(file_path)
-#             else:
-#                 local_file_paths.append(None)  # Append None to indicate a failed download
-#         return local_file_paths
-
-#     def cleanup(self):
-#         # Cleanup any temporary files after use
-#         for item in self.data:
-#             for path in [item['image'], item['label']]:
-#                 if isinstance(path, str) and os.path.exists(path):
-#                     os.remove(path)
-#                 elif isinstance(path, list):
-#                     for sub_path in path:
-#                         if os.path.exists(sub_path):
-#                             os.remove(sub_path)
-
-
 def get_loader(batch_size, data_dir, json_list, fold, roi):
     data_dir = data_dir
     datalist_json = json_list
@@ -237,20 +129,6 @@ def get_loader(batch_size, data_dir, json_list, fold, roi):
             transforms.NormalizeIntensityd(keys="image", nonzero=True, channel_wise=True),
         ]
     )
-
-    # # print(train_files)
-    # filename='flair_images.txt'
-    
-    # with open(filename, 'w') as file:
-    #     # Iterate over each entry in the training files list
-    #     for entry in validation_files:
-    #         # Check if 'image' key exists in the dictionary
-    #         if 'image' in entry:
-    #             # Filter and get only the paths that include 'flair' in their names
-    #             flair_images = [img for img in entry['image'] if 'flair' in img]
-    #             for img in flair_images:
-    #                 # Write each flair image path to the file
-    #                 file.write(img + '\n')
 
     train_ds = data.Dataset(data=train_files, transform=train_transform)
     
@@ -530,20 +408,6 @@ def parse_args():
         default=None,
         help="backend for distributed training (tcp, gloo on cpu and gloo, nccl on gpu)",
     )
-
-    # parser.add_argument(
-    #         "--model-dir",
-    #         type=str,
-    #         default="/opt/ml/model",
-    #         help="model dir",
-    #     )
-
-    # parser.add_argument(
-    #         "--train",
-    #         type=str,
-    #     default="/home/sagemaker-user",
-    #         help="training data dir",
-    #     )
     
 
     # Container environment
@@ -594,11 +458,7 @@ def download_s3_folder(bucket_name, s3_folder, local_dir=None):
 def main(args):
     bucket_name = 'swin-unetr-brains'
     s3_folder = 'TrainingData/'
-    # data = args.train
-    # download_s3_folder(bucket_name, s3_folder, data)
     data = args.train
-    # data = "/home/sagemaker-user"
-    # data = "s3://swin-unetr-brains"
     json_list = "s3://swin-unetr-brains/brats21_folds.json"
     roi = (128, 128, 128)
     fold = 1
@@ -673,4 +533,3 @@ def main(args):
 if __name__ == "__main__":
     args = parse_args()
     main(args)
-    # run_training(args)

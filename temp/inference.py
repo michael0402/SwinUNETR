@@ -52,13 +52,6 @@ def model_fn(model_dir):
 
 
 # data preprocessing
-# def input_fn(request_body, request_content_type):
-#     assert request_content_type == "application/json"
-#     data = json.loads(request_body)
-#     data = torch.tensor(data, dtype=torch.float32, device=device)
-#     return data
-
-
 def input_fn(request_body, request_content_type):
     assert request_content_type == "application/json"
     input_data = json.loads(request_body)
@@ -86,11 +79,6 @@ def input_fn(request_body, request_content_type):
 
 # inference
 def predict_fn(input_object, model):
-    # with torch.no_grad():
-    #     prediction = model(input_object)
-    # return prediction
-
-    # PREDICTION PART - I THINK YOU MIGHT HAVE TO REMOVE THE FOR LOOP
     model_inferer_test = partial(
         sliding_window_inference,
         roi_size=[roi[0], roi[1], roi[2]],
@@ -111,10 +99,6 @@ def predict_fn(input_object, model):
 
 # postprocess
 def output_fn(predictions, content_type):
-    # assert content_type == "application/json"
-    # res = predictions.cpu().numpy().tolist()
-    # return json.dumps(res)
-
     # POST PROCESSING PART
     seg = predictions[0].detach().cpu().numpy()
     seg = (seg > 0.5).astype(np.int8)

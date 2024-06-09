@@ -122,8 +122,3 @@ def test(model_data):
 if __name__ == "__main__":
     model_data = "s3://swin-unetr-brains/DEMO-swin/pytorch-training-2024-05-02-19-52-45-737/output/model.tar.gz"
     test(model_data)
-    # result = test(model_data)
-    # print(result)
-    # result_str = np.array2string(result)  # Convert numpy array to string
-    # with open('/tmp/output.txt', 'w') as f:
-    #     f.write(result_str)
